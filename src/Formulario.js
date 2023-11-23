@@ -14,6 +14,10 @@ function Formulario() {
   const [correo, setCorreo] = useState('');
   const [validated, setValidated] = useState(false);
   const [tabla, setUs] = useState([]);
+  const [id,setId]=useState();
+  const [editar,setEditar]=useState(false);
+
+  
 
   const add = (e) => {
     e.preventDefault();
@@ -25,20 +29,48 @@ function Formulario() {
       alert('Usuario Registrado');
     });
   };
+  const editUs = (val)=>{
+    setEditar(true);
+    setNombre(val.nombre);
+    setApellido(val.apellido)
+    setCorreo(val.correo);
+    setId(val.id);
 
+
+  }
   const getUs = () => {
     Axios.get('http://localhost:3001/us').then((response) => {
       setUs(response.data);
     });
   };
 
-  const handleDelete = (id) => {
+ const handleDelete = (id) => {
+  // Add confirmation alert
+  if (window.confirm("¿Está seguro de eliminar este usuario?")) {
     Axios.delete(`http://localhost:3001/delete/${id}`).then(() => {
       const filteredTabla = tabla.filter((user) => user.id !== id);
       setUs(filteredTabla);
     });
-    };
+  }
+};
 
+  const update = (e) =>{
+    e.preventDefault();
+    Axios.put('http://localhost:3001/update', {
+      id:id, nombre:nombre, apellido:apellido, correo:correo
+
+    }).then((response) =>{
+      getUs();
+      alert(response.data);
+    })
+  }
+  const limpiar = () =>{
+    setEditar(false);
+    setNombre('');
+    setApellido('');
+    setCorreo('');
+    setId('');
+  }
   return (
     <div>
       <Form noValidate validated={validated} onSubmit={add}>
@@ -77,9 +109,20 @@ function Formulario() {
             <Form.Control.Feedback>Please provide a valid correo.</Form.Control.Feedback>
           </Form.Group>
         </Row>
-        <Button variant="primary" type="submit">
+        {
+          editar?
+        <div>
+          <Button variant="success" type="submit" onClick={update}>
+            Actulizar
+          </Button> <Button variant="danger" type="submit" onClick={limpiar}>
+            Cancelar
+          </Button>
+        </div>
+        :
+        <Button variant="success" type="submit">
           Registrar
         </Button>
+        }
       </Form>
       <br />
       <Button variant="primary" onClick={getUs}>
@@ -96,23 +139,23 @@ function Formulario() {
           </tr>
         </thead>
         <tbody>
-          {tabla.map((user) => (
-            <tr key={user.id}>
-              <td>{user.id}</td>
-              <td>{user.nombre}</td>
-              <td>{user.apellido}</td>
-              <td>{user.correo}</td>
+          {tabla.map((val) => (
+            <tr key={val.id}>
+              <td>{val.id}</td>
+              <td>{val.nombre}</td>
+              <td>{val.apellido}</td>
+              <td>{val.correo}</td>
               <td>
-                <Button variant="danger" onClick={() => handleDelete(user.id)}>
+                <Button variant="danger" onClick={() => handleDelete(val.id)}>
                   Eliminar
                 </Button>
-                
-                <Button variant="warning">
+                <>  </>
+                <Button variant="warning" onClick={()=>{editUs(val)}}>
                   Editar
                 </Button>
               </td>
             </tr>
-          ))}
+          ) )}
         </tbody>
       </Table>
     </div>
